@@ -1,59 +1,132 @@
-# a3_cleaner
+<div align="center">
+  <h1>⚡ A3 Cleaner — Arma 3 Memory & Cache Toolkit</h1>
+  <p><b>High-performance memory management toolkit and cache flush utility for Arma 3.<br>Combats engine hash degradation, eliminates FPS rot, and purges bloated memory caches.</b></p>
 
-A lightweight memory management toolkit and cache flush utility for Arma 3 client and dedicated servers.
+  <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=for-the-badge&logo=windows&logoColor=white"/>
+  <img src="https://img.shields.io/badge/C%2B%2B-17-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Arma%203-v2.18%2B-FF6B00?style=for-the-badge&logo=bohemia-interactive&logoColor=white"/>
+  <img src="https://img.shields.io/badge/BattlEye-Safe-brightgreen?style=for-the-badge&logo=shield"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge"/>
+</div>
 
-## Features
+---
 
-- **Standby List & Working Set Flush**: Flushes Windows Standby List and process Working Set using native NT calls.
-- **In-engine SUPERFLUSH Trigger**: Automates the engine-level cache purge routine introduced in v2.18.
-- **Heap Compaction**: Native `callExtension` DLL for in-process heap defragmentation (`HeapCompact`).
-- **Adaptive Trimming**: Automatically initiates cleanup upon detecting elevated page fault rates or aggressive working set expansion.
-- **SQF Garbage Collection**: Server-side script for periodic pruning of discarded weapon holders, craters, and stale entities.
+> **A3 Cleaner tackles the notorious Arma 3 "FPS Rot" phenomenon.**  
+> During prolonged sessions, the Real Virtuality engine accumulates unmanaged hash table references, bloated working sets, and stale standby caches. A3 Cleaner cleans them safely without requiring a server reboot.
 
-## Project Structure
+---
+
+## ✨ What is A3 Cleaner?
+
+**A3 Cleaner** is an all-in-one performance utility designed for both Arma 3 clients and dedicated servers:
+
+1. 🔍 **Engine Cache Flush** — Triggers the internal `SUPERFLUSH` routine introduced in Arma 3 v2.18 via synthetic input automation.
+2. 🧹 **Native Memory Purge** — Uses undocumented Windows NT system routines (`NtSetSystemInformation`) to clear Standby and Modified Page lists.
+3. 📉 **Working Set Trimming** — Evicts unreferenced physical memory pages back to disk cache via `EmptyWorkingSet`.
+4. 🧠 **Heap Compaction (DLL)** — A native `callExtension` C++ DLL providing in-engine heap compaction (`HeapCompact`) to counter SQF hash map fragmentation.
+5. ♻️ **SQF Garbage Collection** — Configurable server-side cleaner removing abandoned weapon holders, craters, ruined vehicles, and empty AI groups.
+6. 🎯 **Adaptive Mode** — Real-time telemetry monitoring Page Faults/sec and Working Set expansion rate to automatically trigger purges when stutter is imminent.
+
+---
+
+## 🖥 Diagnostic Telemetry
+
+| Metric | Details |
+|--------|---------|
+| 💾 **Working Set** | Current and peak physical RAM allocated to Arma 3 |
+| 📄 **Private Usage** | Actual dedicated memory footprint of the game process |
+| ⚡ **Page Faults / sec** | Primary indicator of engine hash table expansion and memory fragmentation |
+| 📈 **WS Growth Rate** | Real-time byte allocation velocity (detects runaway script leaks) |
+| 📊 **System Load** | Global physical memory pressure and commit charge |
+
+---
+
+## ⚙️ Cleaning Modes & Commands
+
+| Mode / Command | Target Layer | Description |
+|----------------|--------------|-------------|
+| ⚡ **SUPERFLUSH** (`F10`) | Engine VRAM / Textures | Invokes engine-level texture and PBO file bank cache flush |
+| 🧹 **Full Flush** (`F11`) | Windows NT Kernel + RAM | Purges Standby List, Modified List, and Arma 3 Working Set |
+| 🧠 **Heap Compact** (`DLL`) | SQF Virtual Machine | Compacts process memory heaps to defragment hash tables |
+| 🤖 **Adaptive Flush** (`F8`) | Autonomous | Automatically cleans when Page Faults exceed threshold |
+| 🗑 **SQF GC Routine** | Mission Entities | Clears dead bodies, dropped loot, craters, and empty groups |
+
+---
+
+## 🎮 Hotkeys Reference
+
+| Key | Action |
+|:---:|--------|
+| `F11` | **Manual Full Flush** — Clears Working Set + Windows Standby List immediately |
+| `F10` | **Engine SUPERFLUSH** — Dispatches native `Shift`+`Num -` `SUPERFLUSH` to the game window |
+| `F9` | **Diagnostic Status** — Prints live process memory metrics, peak usage, and session uptime |
+| `F8` | **Toggle Adaptive Mode** — Enables/disables auto-flush based on Page Fault rates |
+
+---
+
+## 🚫 Safety & Anti-Cheat Compatibility
+
+- 🛡️ **BattlEye Safe**: Does **not** inject code, patch executable memory, or hook game routines.
+- 🔒 **Zero Modding Flags**: External utility interacts via standard Windows APIs (`EmptyWorkingSet`, `SendInput`).
+- ⚡ **No Permanent Tweaks**: Leaves zero permanent registry or system footprint.
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Standalone Cleaner (`ArmaCleaner.exe`)
+
+1. Run `build.bat` (automatically installs a portable compiler if none is detected).
+2. Launch `ArmaCleaner.exe` as **Administrator**.
+3. Start Arma 3 and play. Press `F11` or `F10` whenever FPS drops occur, or let Adaptive Mode handle it automatically.
+
+### Option 2: Server / Mission Integration (`cleaner_x64.dll` + SQF)
+
+1. Place `cleaner_x64.dll` into your root Arma 3 directory (alongside `arma3server_x64.exe`).
+2. Add `fn_cacheCleaner.sqf` to your mission directory (`scripts/fn_cacheCleaner.sqf`).
+3. Call it in your mission's `init.sqf` or `initServer.sqf`:
+   ```sqf
+   [] execVM "scripts\fn_cacheCleaner.sqf";
+   ```
+
+---
+
+## 📁 File Layout
 
 ```
-├── main.cpp                  # Background monitor and external cleaner
-├── cleaner_extension.cpp     # Arma 3 callExtension native DLL
-├── a3cleaner.ini             # Configuration file
-├── build.bat                 # Build script (MSVC / MinGW)
+├── main.cpp                  # Background monitor, diagnostics & hotkey controller
+├── cleaner_extension.cpp     # Arma 3 callExtension native C++ DLL
+├── a3cleaner.ini             # Runtime configuration file
+├── build.bat                 # One-click automated build script (MSVC / MinGW)
 └── scripts/
-    └── fn_cacheCleaner.sqf   # Server/client SQF GC routine
+    └── fn_cacheCleaner.sqf   # Server/client SQF entity garbage collector
 ```
 
-## Building
+---
 
-### MSVC (Developer Command Prompt)
-```cmd
-build.bat
-```
-Or manually:
-```cmd
-cl /O2 /EHsc /DUNICODE /D_UNICODE main.cpp /Fe:ArmaCleaner.exe /link psapi.lib pdh.lib advapi32.lib shell32.lib user32.lib kernel32.lib
-cl /O2 /LD /EHsc cleaner_extension.cpp /Fe:cleaner_x64.dll /link psapi.lib
-```
+## 🛠 Configuration (`a3cleaner.ini`)
 
-### MinGW-w64
-```cmd
-g++ -O2 -DUNICODE -D_UNICODE -std=c++17 main.cpp -o ArmaCleaner.exe -lpsapi -lpdh -ladvapi32 -lshell32
-g++ -O2 -shared -std=c++17 cleaner_extension.cpp -o cleaner_x64.dll -lpsapi
-```
+```ini
+[General]
+AutoFlushInterval = 900          ; Periodic auto-flush in seconds (0 = disabled)
+AutoFlushType = adaptive         ; Options: full, workingset, standby, superflush, adaptive
+BeepOnFlush = 1                  ; Audio confirmation on clean (1 = on, 0 = off)
+LogLevel = info
 
-## Usage
+[Adaptive]
+Enabled = 1                      ; Enable automatic telemetry-driven flushes
+PageFaultThreshold = 50000       ; Page Faults/sec trigger threshold
+WorkingSetGrowthThresholdMB = 512 ; Max allowed memory growth per interval
+CheckInterval = 30               ; Telemetry sample rate in seconds
+MinCooldown = 120                ; Minimum interval between auto-flushes
 
-1. Run `ArmaCleaner.exe` as Administrator.
-2. Launch Arma 3.
-3. Default hotkeys:
-   - `F11`: Immediate full flush (Working Set + Standby List).
-   - `F10`: Trigger in-engine `SUPERFLUSH`.
-   - `F9`: Print diagnostics to console.
-   - `F8`: Toggle adaptive auto-flush.
-
-To use the extension DLL inside missions, place `cleaner_x64.dll` in the Arma 3 root directory and execute:
-```sqf
-[] execVM "scripts\fn_cacheCleaner.sqf";
+[SuperFlush]
+PreDelay = 150                   ; Window activation delay (ms)
+KeyDelay = 35                    ; Synthetic key input cadence (ms)
 ```
 
-## License
+---
 
-MIT
+## 📄 License
+
+MIT © [Myrikov](https://github.com/Myrikov)
