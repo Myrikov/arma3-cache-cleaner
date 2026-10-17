@@ -287,9 +287,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved) {
         case DLL_PROCESS_ATTACH:
             g_initTime = GetTickCount();
             g_lastWorkingSet = GetCurrentWorkingSet();
-            EnablePrivilege(SE_DEBUG_NAME);
-            EnablePrivilege(SE_PROF_SINGLE_PROCESS_NAME);
-            EnablePrivilege(SE_INCREASE_QUOTA_NAME);
+            EnablePrivilege(L"SeDebugPrivilege");
+            EnablePrivilege(L"SeProfileSingleProcessPrivilege");
+            EnablePrivilege(L"SeIncreaseQuotaPrivilege");
             DisableThreadLibraryCalls(hModule);
             break;
         case DLL_PROCESS_DETACH:
