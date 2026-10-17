@@ -1,5 +1,6 @@
 @echo off
 setlocal
+cd /d "%~dp0"
 
 title Building Arma 3 Cache Cleaner...
 echo ============================================
@@ -28,9 +29,9 @@ goto finish
 :use_msvc
 echo Using MSVC compiler...
 echo Compiling ArmaCleaner.exe...
-cl /O2 /EHsc /W3 /DUNICODE /D_UNICODE main.cpp /Fe:ArmaCleaner.exe /link psapi.lib pdh.lib advapi32.lib shell32.lib user32.lib kernel32.lib
+cl /O2 /EHsc /W3 /DUNICODE /D_UNICODE "%~dp0main.cpp" /Fe:"%~dp0ArmaCleaner.exe" /link psapi.lib pdh.lib advapi32.lib shell32.lib user32.lib kernel32.lib
 echo Compiling cleaner_x64.dll...
-cl /O2 /LD /EHsc /W3 cleaner_extension.cpp /Fe:cleaner_x64.dll /link psapi.lib
+cl /O2 /LD /EHsc /W3 "%~dp0cleaner_extension.cpp" /Fe:"%~dp0cleaner_x64.dll" /link psapi.lib
 del /Q *.obj *.exp *.lib 2>nul
 goto verify
 
@@ -46,19 +47,19 @@ goto mingw_build
 
 :mingw_build
 echo Compiling ArmaCleaner.exe...
-%GXX% -O2 -DUNICODE -D_UNICODE -std=c++17 main.cpp -o ArmaCleaner.exe -lpsapi -lpdh -ladvapi32 -lshell32
+%GXX% -O2 -DUNICODE -D_UNICODE -std=c++17 "%~dp0main.cpp" -o "%~dp0ArmaCleaner.exe" -lpsapi -lpdh -ladvapi32 -lshell32
 echo Compiling cleaner_x64.dll...
-%GXX% -O2 -shared -std=c++17 cleaner_extension.cpp -o cleaner_x64.dll -lpsapi
+%GXX% -O2 -shared -std=c++17 "%~dp0cleaner_extension.cpp" -o "%~dp0cleaner_x64.dll" -lpsapi
 
 :verify
 echo.
-if exist "ArmaCleaner.exe" (
+if exist "%~dp0ArmaCleaner.exe" (
     echo [OK] ArmaCleaner.exe built successfully.
 ) else (
     echo [FAIL] ArmaCleaner.exe build failed.
 )
 
-if exist "cleaner_x64.dll" (
+if exist "%~dp0cleaner_x64.dll" (
     echo [OK] cleaner_x64.dll built successfully.
 ) else (
     echo [FAIL] cleaner_x64.dll build failed.
