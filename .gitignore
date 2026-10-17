@@ -1,0 +1,11 @@
+*.obj
+*.exp
+*.lib
+*.exe
+*.dll
+*.log
+.vs/
+build/
+x64/
+Debug/
+Release/
